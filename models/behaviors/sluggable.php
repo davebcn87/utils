@@ -52,7 +52,9 @@ class SluggableBehavior extends ModelBehavior {
 		'length' => 255,
 		'unique' => true,
 		'update' => false,
-		'trigger' => false);
+		'trigger' => false,
+		'specialchars' => false
+		);
 
 /**
  * Initiate behaviour
@@ -158,14 +160,26 @@ class SluggableBehavior extends ModelBehavior {
  * @return string
  */
 	public function multibyteSlug(Model $Model, $string = null) {
-		$str = mb_strtolower($string);
-		$str = preg_replace('/\xE3\x80\x80/', ' ', $str);
-		$str = preg_replace('[\'s ]', 's ', $str);
-		$str = str_replace($this->settings[$Model->alias]['separator'], ' ', $str);
-		$str = preg_replace( '#[:\#\*"()~$^{}`@+=;,<>!&%\.\]\/\'\\\\|\[]#', "\x20", $str );
-		$str = str_replace('?', '', $str);
-		$str = trim($str);
-		$str = preg_replace('#\x20+#', $this->settings[$Model->alias]['separator'], $str);
+	
+		/*Replace the charaters with accentuation and special spanish chars*/
+		if ($this->settings[$Model->alias]['specialchars']){
+			 
+			 if(Configure::Read('App.encoding')!='UTF-8') $string = utf8_encode($string);
+			 
+			 $str = strtolower(Inflector::slug($string,$this->settings[$Model->alias]['separator']));
+		
+		}	
+		else{
+			$str = mb_strtolower($string);
+			$str = preg_replace('/\xE3\x80\x80/', ' ', $str);
+			$str = preg_replace('[\'s ]', 's ', $str);
+			$str = str_replace($this->settings[$Model->alias]['separator'], ' ', $str);
+			$str = preg_replace( '#[:\#\*"()~$^{}`@+=;,<>!&%\.\]\/\'\\\\|\[]#', "\x20", $str );
+			$str = str_replace('?', '', $str);
+			$str = trim($str);
+			$str = preg_replace('#\x20+#', $this->settings[$Model->alias]['separator'], $str);
+
+		}
 		return $str;
 	}
 }
